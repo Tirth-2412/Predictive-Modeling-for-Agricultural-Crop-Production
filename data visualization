@@ -1,0 +1,190 @@
+import pandas as pd
+
+data = pd.read_csv('C:/Users/Jaydeep/OneDrive/Desktop/Final Crop project/crop_production.csv')
+
+data.head()
+
+# Get unique values for each column
+states = data['State'].unique()
+districts = data['District'].unique()
+crops = data['Crop'].unique()
+years = data['Year'].unique()
+seasons = data['Season'].unique()
+
+print("Unique States:", states)
+print("Unique Districts:", districts)
+print("Unique Crops:", crops)
+print("Unique Years:", years)
+print("Unique Seasons:", seasons)
+
+# Count unique values for each column
+unique_counts = {
+    'State': data['State'].nunique(),
+    'District': data['District'].nunique(),
+    'Crop': data['Crop'].nunique(),
+    'Year': data['Year'].nunique(),
+    'Season': data['Season'].nunique()
+}
+
+print("Unique value counts for each column:")
+for column, count in unique_counts.items():
+    print(f"{column}: {count}")
+
+# Group by State and get unique districts
+state_districts = data.groupby('State')['District'].unique()
+
+# Count of unique districts per state
+state_districts_count = state_districts.apply(len)
+
+print("Unique districts per state:")
+for state, districts in state_districts.items():
+    print(f"State: {state}, Unique Districts: {len(districts)}")
+
+# Count the number of available data entries for each year
+yearly_data_count = data.groupby('Year').size()
+
+print("Year-wise count of available data:")
+print(yearly_data_count)
+
+import matplotlib.pyplot as plt
+
+# Remove rows where Year is '2020-21'
+data_filtered = data[data['Year'] != '2020-21']
+
+# Group by Year and sum the Production
+yearly_production = data_filtered.groupby('Year')['Production'].sum()
+
+# Plot the year-wise production
+plt.figure(figsize=(10, 6))
+plt.plot(yearly_production.index, yearly_production.values, marker='o', linestyle='-', color='b')
+plt.xlabel('Year')
+plt.ylabel('Total Production')
+plt.title('Year-wise Total Production (Excluding 2020-21)')
+plt.xticks(rotation=45)
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
+# Group by Crop and sum the Production
+crop_production = data.groupby('Crop')['Production'].sum()
+
+# Plot the crop-wise production
+plt.figure(figsize=(12, 8))
+ax = crop_production.sort_values().plot(kind='barh', color='skyblue')
+
+# Add labels to the bars with unit 'tonnes' and 3 decimal places
+for index, value in enumerate(crop_production.sort_values()):
+    ax.text(value, index, f'{value:,.3f} tonnes', va='center', ha='left')
+
+plt.xlabel('Total Production')
+plt.ylabel('Crop')
+plt.title('Crop-wise Total Production')
+plt.grid(axis='x', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
+import seaborn as sns
+
+
+# Group by Crop and sum the Production
+crop_production = data.groupby('Crop')['Production'].sum()
+
+# Create a DataFrame for plotting
+crop_production_df = crop_production.reset_index()
+
+# Plot the crop-wise production using seaborn
+plt.figure(figsize=(12, 8))
+ax = sns.barplot(x='Production', y='Crop', data=crop_production_df, palette='viridis')
+
+# Add labels to the bars with unit 'tonnes' and 3 decimal places
+for container in ax.containers:
+    ax.bar_label(container, fmt='%.3f tonnes', padding=3)
+
+plt.xlabel('Total Production')
+plt.ylabel('Crop')
+plt.title('Crop-wise Total Production')
+plt.grid(axis='x', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(12, 6))
+sns.boxplot(data=data, x='Season', y='Production', palette='Set2')
+plt.xlabel('Season')
+plt.ylabel('Production')
+plt.title('Production Distribution by Season')
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
+# Group by State and sum Production
+state_production = data.groupby('State')['Production'].sum().reset_index()
+
+# Plot
+plt.figure(figsize=(12, 6))
+sns.barplot(data=state_production, x='State', y='Production', palette='viridis')
+plt.xticks(rotation=45, ha='right')
+plt.xlabel('State')
+plt.ylabel('Total Production')
+plt.title('State-wise Total Crop Production')
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
+# Group by Crop and sum Production
+crop_production = data.groupby('Crop')['Production'].sum()
+
+# Colors for pie chart
+colors = sns.color_palette('Set2', len(crop_production))
+
+# Create a figure and axis for the pie chart
+fig, ax = plt.subplots(figsize=(14, 10))
+
+# Plot pie chart
+ax.pie(crop_production, labels=crop_production.index, autopct='%1.1f%%', startangle=140, colors=colors)
+ax.set_title('Crop-wise Production Distribution', fontsize=16)
+
+# Data for table
+table_data = {
+    'Crop': crop_production.index,
+    'Production': crop_production.values.round(3)  # Round production to 3 decimal places
+}
+table_df = pd.DataFrame(table_data)
+
+# Create a new figure for the table
+fig_table, ax_table = plt.subplots(figsize=(14, 4))  # Adjust size as needed
+ax_table.axis('off')
+
+# Create the table without color column
+table = ax_table.table(cellText=table_df.values,
+                      colLabels=table_df.columns,
+                      cellLoc='center',
+                      loc='center')
+plt.tight_layout()
+plt.show()
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Prepare data for stacked bar plot
+crop_production = data.groupby(['Crop', 'Year'])['Production'].sum().unstack().fillna(0)
+
+# Plot
+crop_production.plot(kind='bar', stacked=True, figsize=(14, 8), colormap='viridis')
+plt.xlabel('Crop')
+plt.ylabel('Total Production')
+plt.title('Crop-wise Production Distribution Over Years')
+plt.legend(title='Year', bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(12, 8))
+sns.stripplot(data=data, y='Crop', x='Production', jitter=True, palette='Set2', alpha=0.6)
+plt.xlabel('Total Production')
+plt.ylabel('Crop')
+plt.title('Production Distribution by Crop')
+plt.grid(axis='x', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
